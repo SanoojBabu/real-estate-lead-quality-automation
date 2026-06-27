@@ -1,0 +1,639 @@
+{
+  "name": "Confident Group — AI Lead Qualification System",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1pFCSZ_GfU0RHwyHu0AYN6BYZ7dm4-XlwfN9F3_JhRZE/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2111633175,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pFCSZ_GfU0RHwyHu0AYN6BYZ7dm4-XlwfN9F3_JhRZE/edit#gid=2111633175"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "c35d8428-ec6c-4ea9-a8e4-78fb4c6cdc7c",
+      "name": "1. Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        192
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "9C8kSues4r3B99Wi",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      },
+      "notes": "Watches Google Sheet linked to your Google Form. Fires every 60 seconds when a new row is added."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── STEP 1: Parse Gemini's JSON response safely ──\nconst rawContent = $input.first().json.candidates[0].content.parts[0].text;\n\nlet aiResult;\ntry {\n  // Try direct parse first\n  aiResult = JSON.parse(rawContent);\n} catch (e) {\n  // If Gemini added any extra text, extract just the JSON object\n  const jsonMatch = rawContent.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    try {\n      aiResult = JSON.parse(jsonMatch[0]);\n    } catch (e2) {\n      // Fallback default if all parsing fails\n      aiResult = {\n        score: 5,\n        classification: 'WARM',\n        reason: 'AI parsing error — manual review needed.',\n        recommended_action: 'Review lead manually and assign to sales team.',\n        priority_flag: false\n      };\n    }\n  }\n}\n\n// ── STEP 2: Pull original lead data from trigger node ──\nconst lead = $('1. Google Sheets Trigger').first().json;\n\n// ── STEP 3: Set display helpers ──\nconst emojiMap = { HOT: '🔥', WARM: '🌤️', COLD: '❄️' };\nconst colorMap = { HOT: '#e74c3c', WARM: '#f39c12', COLD: '#3498db' };\n\nconst classification = aiResult.classification || 'WARM';\n\n// ── STEP 4: Return merged object for all downstream nodes ──\nreturn [{\n  json: {\n    // Original lead fields\n    full_name:     lead['Name']                            || 'N/A',\n    email:         lead['Email']                                || 'N/A',\n    phone:         lead['Phone Number']                         || 'N/A',\n    property_type: lead['Which project are you interested in?'] || 'N/A',\n    location:      lead['Location Preference']                  || 'N/A',\n    budget:        lead['Budget Range']                         || 'N/A',\n    purpose:       lead['Purpose of Purchase']                  || 'N/A',\n    timeline:      lead['Timeline to Buy']                      || 'N/A',\n    source:        lead['How did you hear about us?']           || 'N/A',\n    requirements:  lead['Any specific requirements?']           || 'None',\n    timestamp:     lead['Timestamp']                            || new Date().toISOString(),\n\n    // AI result fields\n    ai_score:           aiResult.score            || 5,\n    classification:     classification,\n    reason:             aiResult.reason           || 'No reason provided.',\n    recommended_action: aiResult.recommended_action || 'Follow up with lead.',\n    priority_flag:      aiResult.priority_flag    || false,\n\n    // Display helpers\n    emoji:         emojiMap[classification] || '🌤️',\n    accent_color:  colorMap[classification] || '#f39c12',\n    priority_label: aiResult.priority_flag ? '⭐ PRIORITY — NRI or High-Value Lead' : ''\n  }\n}];"
+      },
+      "id": "f792a310-3b6a-4501-bfcb-8093c55c2932",
+      "name": "3. Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        192
+      ],
+      "notes": "Safely parses Claude's JSON response. Merges AI scores with original lead data. Adds emoji and color helpers for notifications. Handles parse errors with a safe fallback."
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/1pFCSZ_GfU0RHwyHu0AYN6BYZ7dm4-XlwfN9F3_JhRZE/edit?usp=sharing",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Lead Form Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pFCSZ_GfU0RHwyHu0AYN6BYZ7dm4-XlwfN9F3_JhRZE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.timestamp }}",
+            "Email": "={{ $json.email }}",
+            "Name": "={{ $json.full_name }}",
+            "Phone Number": "={{ $json.phone }}",
+            "Which project are you interested in?": "={{ $json.property_type }}",
+            "Location Preference": "={{ $json.location }}",
+            "Budget Range": "={{ $json.budget }}",
+            "Purpose of Purchase": "={{ $json.purpose }}",
+            "Timeline to Buy": "={{ $json.timeline }}",
+            "How did you hear about us?": "={{ $json.source }}",
+            "Any specific requirements?": "={{ $json.requirements }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Which project are you interested in?",
+              "displayName": "Which project are you interested in?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location Preference",
+              "displayName": "Location Preference",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget Range",
+              "displayName": "Budget Range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Purpose of Purchase",
+              "displayName": "Purpose of Purchase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timeline to Buy",
+              "displayName": "Timeline to Buy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "How did you hear about us?",
+              "displayName": "How did you hear about us?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Any specific requirements?",
+              "displayName": "Any specific requirements?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3e70d6a7-3a7f-49f4-a305-a86e4003d2b2",
+      "name": "4. Google Sheets — Log Lead",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        48,
+        -64
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4dSLyXXbtXxAfOgT",
+          "name": "Google Sheets OAuth2 API"
+        }
+      },
+      "notes": "Writes every lead + AI score to a dedicated Lead Log sheet. This is your database/audit trail. Create a second sheet tab called 'Lead Log' with column headers matching the fields above."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond_hot",
+              "leftValue": "={{ $json.classification }}",
+              "rightValue": "HOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0df1ffe1-4cf6-480d-90b0-f12c7fb78dbc",
+      "name": "5. Is HOT Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        32,
+        368
+      ],
+      "notes": "Branches the workflow. HOT leads (true/top) get priority treatment. WARM and COLD leads (false/bottom) get standard notifications."
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "lead_score",
+                "value": "={{ $json.ai_score }}"
+              },
+              {
+                "property": "lead_classification",
+                "value": "={{ $json.classification }}"
+              },
+              {
+                "property": "ai_recommended_action",
+                "value": "={{ $json.recommended_action }}"
+              },
+              {
+                "property": "priority_flag",
+                "value": "={{ $json.priority_flag }}"
+              },
+              {
+                "property": "property_interest",
+                "value": "={{ $json.property_type }}"
+              },
+              {
+                "property": "budget_range",
+                "value": "={{ $json.budget }}"
+              },
+              {
+                "property": "purchase_purpose",
+                "value": "={{ $json.purpose }}"
+              },
+              {
+                "property": "buy_timeline",
+                "value": "={{ $json.timeline }}"
+              },
+              {
+                "property": "lead_source",
+                "value": "={{ $json.source }}"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "id": "ae63a0e0-203a-4bb5-a98d-36b557d8d800",
+      "name": "6a. HubSpot — HOT Contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        336,
+        -64
+      ],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "jtNkACBY4Yxj3URC",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "notes": "Creates or updates HubSpot contact for HOT leads. Maps all AI scores to custom properties. Create these properties in HubSpot: lead_score (Number), lead_classification (Text), ai_recommended_action (Text), priority_flag (Checkbox), property_interest (Text), budget_range (Text), purchase_purpose (Text), buy_timeline (Text), lead_source (Text)."
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "companyName": "={{ $json.full_name }}",
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "lead_score",
+                "value": "={{ $json.ai_score }}"
+              },
+              {
+                "property": "lead_classification",
+                "value": "={{ $json.classification }}"
+              },
+              {
+                "property": "ai_recommended_action",
+                "value": "={{ $json.recommended_action }}"
+              },
+              {
+                "property": "priority_flag",
+                "value": "={{ $json.priority_flag }}"
+              },
+              {
+                "property": "property_interest",
+                "value": "={{ $json.property_type }}"
+              },
+              {
+                "property": "budget_range",
+                "value": "={{ $json.budget }}"
+              },
+              {
+                "property": "purchase_purpose",
+                "value": "={{ $json.purpose }}"
+              },
+              {
+                "property": "buy_timeline",
+                "value": "={{ $json.timeline }}"
+              },
+              {
+                "property": "lead_source",
+                "value": "={{ $json.source }}"
+              }
+            ]
+          },
+          "firstName": "={{ $json.full_name }}",
+          "phoneNumber": "={{ $json.phone }}"
+        },
+        "options": {}
+      },
+      "id": "6fbc6bea-425f-4b16-b10a-eda1ea6e3322",
+      "name": "6b. HubSpot — WARM/COLD Contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        336,
+        608
+      ],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "jtNkACBY4Yxj3URC",
+          "name": "HubSpot OAuth2 API"
+        }
+      },
+      "notes": "Creates or updates HubSpot contact for WARM and COLD leads with same field mapping."
+    },
+    {
+      "parameters": {
+        "sendTo": "sbk4business@gmail.com",
+        "subject": "={{ $json.emoji }} {{ $json.classification }} Lead: {{ $json.full_name }} — {{ $json.property_type }} ({{ $json.budget }})",
+        "message": "=<html><body style=\"font-family:Arial,sans-serif;max-width:620px;margin:0 auto;background:#f4f4f4;padding:20px\">\n<div style=\"background:#0D1B2A;padding:24px 28px;border-radius:10px 10px 0 0\">\n  <h2 style=\"color:#C9A84C;margin:0;font-size:20px\">🏛️ Confident Group</h2>\n  <p style=\"color:rgba(255,255,255,0.6);margin:4px 0 0;font-size:13px\">AI Lead Qualification Alert</p>\n</div>\n<div style=\"background:#fff;padding:24px 28px;border-radius:0 0 10px 10px;border:1px solid #e0e0e0\">\n  <div style=\"border-left:5px solid {{ $json.accent_color }};padding:14px 18px;background:#fafafa;border-radius:0 8px 8px 0;margin-bottom:22px\">\n    <div style=\"font-size:24px;font-weight:bold;color:{{ $json.accent_color }}\">{{ $json.emoji }} {{ $json.classification }} — {{ $json.ai_score }}/10</div>\n    <p style=\"margin:8px 0 4px;color:#333\"><strong>AI Reason:</strong> {{ $json.reason }}</p>\n    <p style=\"margin:4px 0;color:#27ae60\"><strong>Recommended Action:</strong> {{ $json.recommended_action }}</p>\n    {{ $json.priority_flag === true ? '<p style=\"margin:8px 0 0;color:#8e44ad;font-weight:bold\">⭐ PRIORITY — NRI or High-Value Lead</p>' : '' }}\n  </div>\n  <table style=\"width:100%;border-collapse:collapse;font-size:13.5px\">\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;width:38%;border-bottom:1px solid #eee\">Full Name</td><td style=\"padding:10px 12px;font-weight:600;border-bottom:1px solid #eee\">{{ $json.full_name }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Email</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.email }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Phone</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.phone }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Property Interest</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.property_type }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Location</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.location }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Budget</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.budget }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Purpose</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.purpose }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Timeline</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.timeline }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Lead Source</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.source }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666\">Requirements</td><td style=\"padding:10px 12px\">{{ $json.requirements }}</td></tr>\n  </table>\n  <p style=\"font-size:11px;color:#aaa;margin-top:20px;text-align:center\">Automated by Confident Group AI Lead System · {{ $json.timestamp }}</p>\n</div>\n</body></html>",
+        "options": {}
+      },
+      "id": "a3f1d781-a48f-4737-aa70-a499a3116722",
+      "name": "7a. Gmail — HOT Lead Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        576,
+        0
+      ],
+      "webhookId": "ce1d4a01-9eaa-4bdb-bfba-8c0c8972e9d8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9pSFUhHTfX2n75ki",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "notes": "Sends a priority HTML email for HOT leads with full lead details, AI score card, and recommended action highlighted."
+    },
+    {
+      "parameters": {
+        "sendTo": "sbk4business@gmail.com",
+        "subject": "={{ $json.emoji }} {{ $json.classification }} Lead: {{ $json.full_name }} — {{ $json.property_type }} ({{ $json.budget }})",
+        "message": "=<html><body style=\"font-family:Arial,sans-serif;max-width:620px;margin:0 auto;background:#f4f4f4;padding:20px\">\n<div style=\"background:#0D1B2A;padding:24px 28px;border-radius:10px 10px 0 0\">\n  <h2 style=\"color:#C9A84C;margin:0;font-size:20px\">🏛️ Confident Group</h2>\n  <p style=\"color:rgba(255,255,255,0.6);margin:4px 0 0;font-size:13px\">AI Lead Qualification Alert</p>\n</div>\n<div style=\"background:#fff;padding:24px 28px;border-radius:0 0 10px 10px;border:1px solid #e0e0e0\">\n  <div style=\"border-left:5px solid {{ $json.accent_color }};padding:14px 18px;background:#fafafa;border-radius:0 8px 8px 0;margin-bottom:22px\">\n    <div style=\"font-size:22px;font-weight:bold;color:{{ $json.accent_color }}\">{{ $json.emoji }} {{ $json.classification }} — {{ $json.ai_score }}/10</div>\n    <p style=\"margin:8px 0 4px;color:#333\"><strong>AI Reason:</strong> {{ $json.reason }}</p>\n    <p style=\"margin:4px 0;color:#555\"><strong>Recommended Action:</strong> {{ $json.recommended_action }}</p>\n  </div>\n  <table style=\"width:100%;border-collapse:collapse;font-size:13.5px\">\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;width:38%;border-bottom:1px solid #eee\">Full Name</td><td style=\"padding:10px 12px;font-weight:600;border-bottom:1px solid #eee\">{{ $json.full_name }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Email</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.email }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Phone</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.phone }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Property Interest</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.property_type }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Budget</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.budget }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Timeline</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.timeline }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666\">Requirements</td><td style=\"padding:10px 12px\">{{ $json.requirements }}</td></tr>\n  </table>\n  <p style=\"font-size:11px;color:#aaa;margin-top:20px;text-align:center\">Automated by Confident Group AI Lead System · {{ $json.timestamp }}</p>\n</div>\n</body></html>",
+        "options": {}
+      },
+      "id": "dd85a5a4-904f-4786-be2d-f19044704d21",
+      "name": "7b. Gmail — WARM/COLD Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        576,
+        368
+      ],
+      "webhookId": "5d9892f6-c78b-4b15-a398-63778ad40506",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9pSFUhHTfX2n75ki",
+          "name": "Gmail OAuth2 API"
+        }
+      },
+      "notes": "Sends standard HTML email for WARM and COLD leads."
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#confident-group-lead-updates",
+          "mode": "name"
+        },
+        "text": "={{ $json.emoji }} *{{ $json.classification }} LEAD — Confident Group*\n{{ $json.priority_label }}\n\n*Name:* {{ $json.full_name }}\n*Phone:* {{ $json.phone }}  |  *Email:* {{ $json.email }}\n*Interest:* {{ $json.property_type }} in {{ $json.location }}\n*Budget:* {{ $json.budget }}  |  *Purpose:* {{ $json.purpose }}\n*Timeline:* {{ $json.timeline }}  |  *Source:* {{ $json.source }}\n\n━━━━━━━━━━━━━━━━━━━━━━\n*AI Score:* {{ $json.ai_score }}/10  →  *{{ $json.classification }}*\n*Reason:* {{ $json.reason }}\n*Next Action:* {{ $json.recommended_action }}\n━━━━━━━━━━━━━━━━━━━━━━\n_Requirements: {{ $json.requirements }}_\n_Received: {{ $json.timestamp }}_",
+        "otherOptions": {}
+      },
+      "id": "d0ec017d-aa96-4f84-9f78-51271960861c",
+      "name": "8a. Slack — HOT Lead Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        160
+      ],
+      "webhookId": "b9606c42-fae2-4cdb-8636-a4228f97681f",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "9TRjrfd4PSTvjpst",
+          "name": "Slack OAuth2 API"
+        }
+      },
+      "notes": "Posts a full lead card to your Slack #leads channel for HOT leads. Replace #confident-group-lead-updates with your actual channel ID (right-click channel in Slack → Copy link → last part is the ID)."
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#confident-group-lead-updates",
+          "mode": "name"
+        },
+        "text": "={{ $json.emoji }} *{{ $json.classification }} LEAD — Confident Group*\n\n*Name:* {{ $json.full_name }}\n*Phone:* {{ $json.phone }}  |  *Email:* {{ $json.email }}\n*Interest:* {{ $json.property_type }} in {{ $json.location }}\n*Budget:* {{ $json.budget }}  |  *Timeline:* {{ $json.timeline }}\n\n*AI Score:* {{ $json.ai_score }}/10  →  *{{ $json.classification }}*\n*Next Action:* {{ $json.recommended_action }}\n_Received: {{ $json.timestamp }}_",
+        "otherOptions": {}
+      },
+      "id": "5c56e2e2-b46b-490a-8304-2050f0000ad0",
+      "name": "8b. Slack — WARM/COLD Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        528
+      ],
+      "webhookId": "e74a8c65-b857-4bab-8772-4196c55cc62e",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "9TRjrfd4PSTvjpst",
+          "name": "Slack OAuth2 API"
+        }
+      },
+      "notes": "Posts a compact lead card to Slack for WARM and COLD leads."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyB-WsA_3ekbda9n0Zu3prbfTDBd2nasxoM",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"You are a real estate lead qualification expert for Confident Group, a premium property developer in Kerala, India. Score this enquiry from 1-10 and classify as HOT / WARM / COLD based on: budget fit, purchase intent, timeline urgency, and NRI/investor potential. Return ONLY valid JSON.    {  \\\"score\\\":0,  \\\"classification\\\":\\\"\\\",  \\\"reason\\\":\\\"\\\",  \\\"recommended_action\\\":\\\"\\\",  \\\"priority_flag\\\":false  }    Lead Details:  Name: {{ $json['Name'] }}  Email: {{ $json['Email'] }}  Phone: {{ $json['Phone Number'] }}  Interested In: {{ $json['Which project are you interested in?'] }}  Location Preference: {{ $json['Location Preference'] }}  Budget: {{ $json['Budget Range'] }}  Purpose: {{ $json['Purpose of Purchase'] }}  Timeline: {{ $json['Timeline to Buy'] }}  Source: {{ $json['How did you hear about us?'] }}  Requirements: {{ $json['Any specific requirements?'] }}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.2,\n    \"maxOutputTokens\": 2000,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "id": "f603e82f-4237-4337-9718-c928d215d519",
+      "name": "2. Gemini — Score Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        192
+      ],
+      "notes": "Calls Anthropic Claude API. Sends lead details and gets back a JSON score, classification, reason, recommended action, and priority flag."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1. Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "2. Gemini — Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "4. Google Sheets — Log Lead",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "5. Is HOT Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Is HOT Lead?": {
+      "main": [
+        [
+          {
+            "node": "6a. HubSpot — HOT Contact",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "7a. Gmail — HOT Lead Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "8a. Slack — HOT Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6b. HubSpot — WARM/COLD Contact",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "7b. Gmail — WARM/COLD Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "8b. Slack — WARM/COLD Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Gemini — Score Lead": {
+      "main": [
+        [
+          {
+            "node": "3. Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "6d88b5c3-74c6-455b-bf04-c144925f1a84",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6381abb394512ee4b8c30fd983c99983bf55883c983961816038108c99467d9a"
+  },
+  "nodeGroups": [],
+  "id": "zCX0iOO0Dl039qAu",
+  "tags": [
+    {
+      "updatedAt": "2026-06-26T19:55:55.902Z",
+      "createdAt": "2026-06-26T19:55:55.902Z",
+      "id": "4uyZt1LDE8aIuEYg",
+      "name": "lead-qualification"
+    },
+    {
+      "updatedAt": "2026-06-26T19:55:55.949Z",
+      "createdAt": "2026-06-26T19:55:55.949Z",
+      "id": "J1E1DiwQZjfixL2E",
+      "name": "ai-automation"
+    },
+    {
+      "updatedAt": "2026-06-26T19:55:55.971Z",
+      "createdAt": "2026-06-26T19:55:55.971Z",
+      "id": "LxAEV9ZKof70WuI2",
+      "name": "assessment-task-1"
+    },
+    {
+      "updatedAt": "2026-06-26T19:55:55.923Z",
+      "createdAt": "2026-06-26T19:55:55.923Z",
+      "id": "QCLAf9wiKHI9XSx9",
+      "name": "confident-group"
+    },
+    {
+      "updatedAt": "2026-06-26T19:55:55.877Z",
+      "createdAt": "2026-06-26T19:55:55.877Z",
+      "id": "pskHCMhJ2Y6hUhil",
+      "name": "real-estate"
+    }
+  ]
+}
