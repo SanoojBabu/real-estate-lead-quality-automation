@@ -12,7 +12,7 @@
         },
         "documentId": {
           "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1pFCSZ_GfU0RHwyHu0AYN6BYZ7dm4-XlwfN9F3_JhRZE/edit?usp=sharing",
+          "value": "[YOUR_SPREADSHEET_URL]",
           "mode": "url"
         },
         "sheetName": {
@@ -20,7 +20,7 @@
           "value": 2111633175,
           "mode": "list",
           "cachedResultName": "Form Responses 1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pFCSZ_GfU0RHwyHu0AYN6BYZ7dm4-XlwfN9F3_JhRZE/edit#gid=2111633175"
+          "cachedResultUrl": "[YOUR_SPREADSHEET_URL]"
         },
         "event": "rowAdded",
         "options": {}
@@ -36,7 +36,7 @@
       "alwaysOutputData": false,
       "credentials": {
         "googleSheetsTriggerOAuth2Api": {
-          "id": "9C8kSues4r3B99Wi",
+          "id": "[GOOGLE_SHEET_CREDENTIAL]",
           "name": "Google Sheets Trigger OAuth2 API"
         }
       },
@@ -54,7 +54,7 @@
         -192,
         192
       ],
-      "notes": "Safely parses Claude's JSON response. Merges AI scores with original lead data. Adds emoji and color helpers for notifications. Handles parse errors with a safe fallback."
+      "notes": "Safely parses Gemini's JSON response. Merges AI scores with original lead data. Adds emoji and color helpers for notifications. Handles parse errors with a safe fallback."
     },
     {
       "parameters": {
@@ -62,7 +62,7 @@
         "documentId": {
           "__rl": true,
           "mode": "url",
-          "value": "https://docs.google.com/spreadsheets/d/1pFCSZ_GfU0RHwyHu0AYN6BYZ7dm4-XlwfN9F3_JhRZE/edit?usp=sharing",
+          "value": "[YOUR_SPREADSHEET_URL]",
           "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
         },
         "sheetName": {
@@ -70,7 +70,7 @@
           "value": "gid=0",
           "mode": "list",
           "cachedResultName": "Lead Form Responses",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pFCSZ_GfU0RHwyHu0AYN6BYZ7dm4-XlwfN9F3_JhRZE/edit#gid=0"
+          "cachedResultUrl": "[YOUR_SPREADSHEET_URL]"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -204,7 +204,7 @@
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "4dSLyXXbtXxAfOgT",
+          "id": "[GOOGLE_SHEET_CREDENTIAL]",
           "name": "Google Sheets OAuth2 API"
         }
       },
@@ -302,7 +302,7 @@
       ],
       "credentials": {
         "hubspotOAuth2Api": {
-          "id": "jtNkACBY4Yxj3URC",
+          "id": "[HUBSPOT_CREDENTIAL]",
           "name": "HubSpot OAuth2 API"
         }
       },
@@ -369,7 +369,7 @@
       ],
       "credentials": {
         "hubspotOAuth2Api": {
-          "id": "jtNkACBY4Yxj3URC",
+          "id": "[HUBSPOT_CREDENTIAL]",
           "name": "HubSpot OAuth2 API"
         }
       },
@@ -377,7 +377,7 @@
     },
     {
       "parameters": {
-        "sendTo": "sbk4business@gmail.com",
+        "sendTo": "[SALES_PERSON_MAIL_ID]",
         "subject": "={{ $json.emoji }} {{ $json.classification }} Lead: {{ $json.full_name }} — {{ $json.property_type }} ({{ $json.budget }})",
         "message": "=<html><body style=\"font-family:Arial,sans-serif;max-width:620px;margin:0 auto;background:#f4f4f4;padding:20px\">\n<div style=\"background:#0D1B2A;padding:24px 28px;border-radius:10px 10px 0 0\">\n  <h2 style=\"color:#C9A84C;margin:0;font-size:20px\">🏛️ Confident Group</h2>\n  <p style=\"color:rgba(255,255,255,0.6);margin:4px 0 0;font-size:13px\">AI Lead Qualification Alert</p>\n</div>\n<div style=\"background:#fff;padding:24px 28px;border-radius:0 0 10px 10px;border:1px solid #e0e0e0\">\n  <div style=\"border-left:5px solid {{ $json.accent_color }};padding:14px 18px;background:#fafafa;border-radius:0 8px 8px 0;margin-bottom:22px\">\n    <div style=\"font-size:24px;font-weight:bold;color:{{ $json.accent_color }}\">{{ $json.emoji }} {{ $json.classification }} — {{ $json.ai_score }}/10</div>\n    <p style=\"margin:8px 0 4px;color:#333\"><strong>AI Reason:</strong> {{ $json.reason }}</p>\n    <p style=\"margin:4px 0;color:#27ae60\"><strong>Recommended Action:</strong> {{ $json.recommended_action }}</p>\n    {{ $json.priority_flag === true ? '<p style=\"margin:8px 0 0;color:#8e44ad;font-weight:bold\">⭐ PRIORITY — NRI or High-Value Lead</p>' : '' }}\n  </div>\n  <table style=\"width:100%;border-collapse:collapse;font-size:13.5px\">\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;width:38%;border-bottom:1px solid #eee\">Full Name</td><td style=\"padding:10px 12px;font-weight:600;border-bottom:1px solid #eee\">{{ $json.full_name }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Email</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.email }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Phone</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.phone }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Property Interest</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.property_type }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Location</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.location }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Budget</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.budget }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Purpose</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.purpose }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Timeline</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.timeline }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Lead Source</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.source }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666\">Requirements</td><td style=\"padding:10px 12px\">{{ $json.requirements }}</td></tr>\n  </table>\n  <p style=\"font-size:11px;color:#aaa;margin-top:20px;text-align:center\">Automated by Confident Group AI Lead System · {{ $json.timestamp }}</p>\n</div>\n</body></html>",
         "options": {}
@@ -393,7 +393,7 @@
       "webhookId": "ce1d4a01-9eaa-4bdb-bfba-8c0c8972e9d8",
       "credentials": {
         "gmailOAuth2": {
-          "id": "9pSFUhHTfX2n75ki",
+          "id": "[GOOGLE_CREDENTIAL]",
           "name": "Gmail OAuth2 API"
         }
       },
@@ -401,7 +401,7 @@
     },
     {
       "parameters": {
-        "sendTo": "sbk4business@gmail.com",
+        "sendTo": "[SALES_PERSON_MAIL_ID]",
         "subject": "={{ $json.emoji }} {{ $json.classification }} Lead: {{ $json.full_name }} — {{ $json.property_type }} ({{ $json.budget }})",
         "message": "=<html><body style=\"font-family:Arial,sans-serif;max-width:620px;margin:0 auto;background:#f4f4f4;padding:20px\">\n<div style=\"background:#0D1B2A;padding:24px 28px;border-radius:10px 10px 0 0\">\n  <h2 style=\"color:#C9A84C;margin:0;font-size:20px\">🏛️ Confident Group</h2>\n  <p style=\"color:rgba(255,255,255,0.6);margin:4px 0 0;font-size:13px\">AI Lead Qualification Alert</p>\n</div>\n<div style=\"background:#fff;padding:24px 28px;border-radius:0 0 10px 10px;border:1px solid #e0e0e0\">\n  <div style=\"border-left:5px solid {{ $json.accent_color }};padding:14px 18px;background:#fafafa;border-radius:0 8px 8px 0;margin-bottom:22px\">\n    <div style=\"font-size:22px;font-weight:bold;color:{{ $json.accent_color }}\">{{ $json.emoji }} {{ $json.classification }} — {{ $json.ai_score }}/10</div>\n    <p style=\"margin:8px 0 4px;color:#333\"><strong>AI Reason:</strong> {{ $json.reason }}</p>\n    <p style=\"margin:4px 0;color:#555\"><strong>Recommended Action:</strong> {{ $json.recommended_action }}</p>\n  </div>\n  <table style=\"width:100%;border-collapse:collapse;font-size:13.5px\">\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;width:38%;border-bottom:1px solid #eee\">Full Name</td><td style=\"padding:10px 12px;font-weight:600;border-bottom:1px solid #eee\">{{ $json.full_name }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Email</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.email }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Phone</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.phone }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Property Interest</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.property_type }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Budget</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.budget }}</td></tr>\n    <tr><td style=\"padding:10px 12px;color:#666;border-bottom:1px solid #eee\">Timeline</td><td style=\"padding:10px 12px;border-bottom:1px solid #eee\">{{ $json.timeline }}</td></tr>\n    <tr style=\"background:#f8f8f8\"><td style=\"padding:10px 12px;color:#666\">Requirements</td><td style=\"padding:10px 12px\">{{ $json.requirements }}</td></tr>\n  </table>\n  <p style=\"font-size:11px;color:#aaa;margin-top:20px;text-align:center\">Automated by Confident Group AI Lead System · {{ $json.timestamp }}</p>\n</div>\n</body></html>",
         "options": {}
@@ -417,7 +417,7 @@
       "webhookId": "5d9892f6-c78b-4b15-a398-63778ad40506",
       "credentials": {
         "gmailOAuth2": {
-          "id": "9pSFUhHTfX2n75ki",
+          "id": "[GOOGLE_CREDENTIAL]",
           "name": "Gmail OAuth2 API"
         }
       },
@@ -446,7 +446,7 @@
       "webhookId": "b9606c42-fae2-4cdb-8636-a4228f97681f",
       "credentials": {
         "slackOAuth2Api": {
-          "id": "9TRjrfd4PSTvjpst",
+          "id": "[SLACK_CREDENTIAL]",
           "name": "Slack OAuth2 API"
         }
       },
@@ -475,7 +475,7 @@
       "webhookId": "e74a8c65-b857-4bab-8772-4196c55cc62e",
       "credentials": {
         "slackOAuth2Api": {
-          "id": "9TRjrfd4PSTvjpst",
+          "id": "[SLACK_CREDENTIAL]",
           "name": "Slack OAuth2 API"
         }
       },
@@ -484,7 +484,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyB-WsA_3ekbda9n0Zu3prbfTDBd2nasxoM",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=[AI_STUDIO_API_KEY]",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -507,7 +507,7 @@
         -384,
         192
       ],
-      "notes": "Calls Anthropic Claude API. Sends lead details and gets back a JSON score, classification, reason, recommended action, and priority flag."
+      "notes": "Calls Google Gemini API. Sends lead details and gets back a JSON score, classification, reason, recommended action, and priority flag."
     }
   ],
   "pinData": {},
@@ -597,7 +597,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "6d88b5c3-74c6-455b-bf04-c144925f1a84",
+  "versionId": "ed53757b-b4be-4529-ad0f-d886e7a1d164",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6381abb394512ee4b8c30fd983c99983bf55883c983961816038108c99467d9a"
