@@ -138,8 +138,7 @@ The Google Gemini AI node evaluates each lead on four dimensions:
 ```
 confident-group-lead-qualification/
 │
-├── workflow/
-│   └── confident_group_lead_qualification_FINAL.json   ← n8n workflow (import this)
+├── Confident Group — AI Lead Qualification System.json   ← n8n workflow (import this)
 │
 └── README.md                                            ← You are here
 ```
@@ -162,7 +161,7 @@ confident-group-lead-qualification/
 1. Log in to [app.n8n.cloud](https://app.n8n.cloud)
 2. Click **New Workflow**
 3. Click ⋮ menu → **Import from File**
-4. Upload `confident_group_lead_qualification_FINAL.json`
+4. Upload `Confident Group — AI Lead Qualification System.json`
 
 ---
 
@@ -193,11 +192,11 @@ AI Score | Classification | Reason | Recommended Action | Priority Flag
 
 1. Go to [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 2. Click **Create API Key** → copy it
-3. In n8n → open **Node 2 (Claude AI — Score Lead)**
-4. In the Header Parameters, replace `YOUR_ANTHROPIC_API_KEY` with your Gemini key
+3. In n8n → open **Node 2 (Gemini AI — Score Lead)**
+4. In the Header Parameters, replace `YOUR_AI_STUDIO_API_KEY` with your Gemini key
 5. Update the URL to:
 ```
-https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=YOUR_KEY
+https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_KEY
 ```
 
 ---
@@ -241,7 +240,7 @@ Open each node and replace these placeholders:
 |---|---|
 | `YOUR_GOOGLE_SHEET_ID` | ID from your Form-linked Sheet URL |
 | `YOUR_LEAD_LOG_SHEET_ID` | ID of the sheet with Lead Log tab |
-| `YOUR_ANTHROPIC_API_KEY` | Your Google Gemini API key |
+| `YOUR_AI_STUDIO_API_KEY` | Your Google Gemini API key |
 | `YOUR_SALES_TEAM_EMAIL@gmail.com` | Your sales email address |
 | `YOUR_SLACK_CHANNEL_ID` | Slack → right-click channel → Copy link |
 
